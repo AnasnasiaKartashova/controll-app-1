@@ -1,4 +1,5 @@
 import random
+from typing import List
 
 from fastapi import APIRouter, HTTPException, Depends, Query
 from pymysql import IntegrityError
@@ -12,7 +13,6 @@ router_level_test = APIRouter(prefix="/level-test", tags=['level test'])
 
 
 @router_level_test.get("/questions/")
-
 def get_questions(page: int = Query(1, ge=1), page_size: int = Query(5, ge=1), db: Session = Depends(get_db)):
     questions = db.query(Level).all()
     if not questions:
@@ -33,9 +33,31 @@ def get_questions(page: int = Query(1, ge=1), page_size: int = Query(5, ge=1), d
     return {"questions": response}
 
 
-@router_level_test.get("/question/result")
-def result_test():
-    pass
+@router_level_test.post("/question/result")
+def check_answers(answers: List[int], db: Session = Depends(get_db)):
+    questions = db.query(Level).all()
+    if not questions:
+        raise HTTPException(status_code=404, detail="Questions not found")
+    num_correct = 0
+    for i, question in enumerate(questions):
+        correct_answer = list(question.answer.keys())[0]
+        if answers[i] == int(correct_answer[-1]):
+            num_correct += 1
+            if 5 < num_correct <= 25:
+                result = f"Вы набрали {num_correct} из {len(questions)} баллов, ваш уровень А1"
+            elif 25 < num_correct <= 45:
+                result = f"Вы набрали {num_correct} из {len(questions)} баллов, ваш уровень А2"
+            elif 45 < num_correct <= 65:
+                result = f"Вы набрали {num_correct} из {len(questions)} баллов, ваш уровень B1"
+            elif 65 < num_correct <= 85:
+                result = f"Вы набрали {num_correct} из {len(questions)} баллов, ваш уровень B2"
+            elif 85 < num_correct <= 105:
+                result = f"Вы набрали {num_correct} из {len(questions)} баллов, ваш уровень C1"
+            elif 105 < num_correct <= 113:
+                result = f"Вы набрали {num_correct} из {len(questions)} баллов, ваш уровень C2"
+            else:
+                result = f"Вы набрали {num_correct} из {len(questions)} баллов, ваш уровень A0"
+    return {"result": result}
 
 
 @router_level_test.post("/add-question/")
@@ -52,12 +74,6 @@ def post_question(qwestion_add: LevelSchema, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Question already exists")
 
     return {"message": "Created question"}
-
-
-@router_level_test.post("/question/answer-user/")
-def answer_user():
-    pass
-
 
 
 @router_level_test.patch("/update-question/{question_id}")
