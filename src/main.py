@@ -8,10 +8,11 @@ from src.models.test_topic.topic_api import router_topic
 from src.models.lessons.lesson_api import router_lessons
 from src.models.test_level.level_api import router_level_test
 from src.models.media_file.media_api import router_media
-
+from src.models.user_status.status_api import router_user_status
 
 
 app = FastAPI()
+
 
 app.include_router(router_auth)
 app.include_router(router_user)
@@ -20,6 +21,7 @@ app.include_router(router_topic)
 app.include_router(router_lessons)
 app.include_router(router_level_test)
 app.include_router(router_media)
+app.include_router(router_user_status)
 
 
 Base.metadata.create_all(bind=engine)
