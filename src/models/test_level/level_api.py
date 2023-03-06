@@ -9,7 +9,7 @@ from src.database_connection import get_db
 from src.models.test_level.level_model import Level
 from src.models.test_level.level_schema import LevelSchema
 
-router_level_test = APIRouter(prefix="/level-test", tags=['level test'])
+router_level_test = APIRouter(prefix="/level-test", tags=['level-test'])
 
 
 @router_level_test.get("/questions/")

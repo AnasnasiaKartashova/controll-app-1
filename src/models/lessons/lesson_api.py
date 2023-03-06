@@ -1,10 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.session import Session
+
+from src.auth.manager import get_current_user
 from src.database_connection import get_db
 from src.models.lessons.lesson_schema import LessonSchema
 from src.models.lessons import lesson_model as model
 from src.models.lessons.lesson_model import Lesson
+from src.models.user_status.status_model import UserStatus
 
 router_lessons = APIRouter(prefix="/lessons", tags=["lessons"])
 
@@ -24,6 +27,20 @@ def get_lesson(lesson_id: int, db:Session = Depends(get_db)):
         raise HTTPException (status_code= 404, detail="Lesson doesn't exist")
 
     return lesson
+
+
+@router_lessons.post("/lessons/{lesson_id}")
+def post_lesson(lesson_id: int, lesson: Lesson = Depends(get_lesson), db: Session = Depends(get_db),
+                current_user: dict = Depends(get_current_user)):
+    user_id = current_user.get('id')
+    user_status = db.query(UserStatus).filter_by(user_id=user_id, lesson_id=lesson_id).first()
+    if not user_status:
+        user_status = UserStatus(user_id=user_id, lesson_id=lesson_id, last_lesson=lesson.topic_name)
+    else:
+        user_status.last_lesson = lesson.topic_name
+    db.merge(user_status)
+    db.commit()
+    return {"message": "Last lesson updated successfully!"}
 
 
 @router_lessons.post("/add-lesson/")
